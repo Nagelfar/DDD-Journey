@@ -1,21 +1,43 @@
 using System;
 using Xunit;
 
-namespace Domain.Tests
+namespace Domain.Tests.Assignment3
 {
-    public class Assignment2
+    public class Assignment3
     {
         [Fact]
-        public void canResolveATodoIssue()
+        public void canCreateTodo()
         {
-            // Arrange
             var service = new TodoService();
             var id = Guid.NewGuid();
-            service.ComposeTodo(id, "Sommerreifen aufziehen", new System.DateTime(2018, 4, 15));
 
-            // Act
-            service.Resolve(id);
+            var command = new ComposeTodoCommand
+            {
+                Id = id,
+                Task = "Sommerreifen aufziehen",
+                Until = new DateTime(2018, 4, 15)
+            };
+
+            service.When(command);
+
+            service.When(new ResolveTodoCommand
+            {
+                Id = id
+            });
         }
+    }
+
+
+    public class ComposeTodoCommand
+    {
+        public Guid Id { get; set; }
+        public string Task { get; set; }
+        public DateTime? Until { get; set; }
+    }
+
+    public class ResolveTodoCommand
+    {
+        public Guid Id { get; set; }
     }
 
 
@@ -64,19 +86,24 @@ namespace Domain.Tests
     {
         IRepository<Todo> repository = new InMemoryRepository<Todo>();
 
-        public void ComposeTodo(Guid id, string task, DateTime until)
+        public void When(ComposeTodoCommand command)
         {
-            var todo = Todo.ComposeNew(task);
+            var todo = Todo.ComposeNew(command.Task);
 
-            todo.ShiftDeadline(until);
+            if (command.Until.HasValue)
+                todo.ShiftDeadline(command.Until.Value);
 
-            repository.Save(id, todo);
+            repository.Save(command.Id, todo);
         }
 
-        internal void Resolve(Guid id)
+        public void When(ResolveTodoCommand command)
         {
-            var todo = repository.Get(id);
+            var todo = repository.Get(command.Id);
+
             todo.Resolve();
+
+            repository.Save(command.Id, todo);
         }
     }
+
 }

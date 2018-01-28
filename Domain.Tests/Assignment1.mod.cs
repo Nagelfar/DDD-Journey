@@ -9,7 +9,7 @@ namespace Domain.Tests.Assignment1.Mod
         public void canCreateTodo()
         {
             var service = new TodoService();
-            service.CreateTodo("Sommerreifen aufziehen", new DateTime(2018, 4, 15));
+            service.ComposeTodo("Sommerreifen aufziehen", new DateTime(2018, 4, 15));
         }
     }
 
@@ -52,7 +52,7 @@ namespace Domain.Tests.Assignment1.Mod
     {
         IRepository<Todo> repository = new InMemoryRepository<Todo>();
 
-        public void CreateTodo(string task, DateTime until)
+        public void ComposeTodo(string task, DateTime until)
         {
             var todo = Todo.ComposeNew(task);
             

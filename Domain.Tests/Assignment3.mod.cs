@@ -3,30 +3,38 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Domain.Tests.Assignment2.Mod.Helpers;
+using Domain.Tests.Assignment3.Mod.Helpers;
 using Newtonsoft.Json;
 using Xunit;
 using static Domain.Tests.Output;
 
-namespace Domain.Tests.Assignment2.Mod
+namespace Domain.Tests.Assignment3.Mod
 {
-    public class Assignment2
+    public class Assignment3
     {
-        // [Fact]
+        [Fact]
         public void canDispatchMessages()
         {
             var service = new TodoService();
 
+            var id = Guid.NewGuid();
+
             var command = new ComposeTodoCommand
             {
+                Id = id,
                 Task = "Sommerreifen aufziehen",
                 Until = new DateTime(2018, 4, 15)
             };
 
             DispatchToWhen.SendMessageRightAway(service, command);
+
+            DispatchToWhen.SendMessageRightAway(service, new ResolveTodoCommand
+            {
+                Id = id
+            });
         }
 
-        // [Fact]
+        [Fact]
         public void massiveLoad()
         {
             var service = new TodoService();
@@ -34,6 +42,7 @@ namespace Domain.Tests.Assignment2.Mod
             var commands = Enumerable.Range(1, 15)
                 .Select(i => new ComposeTodoCommand
                 {
+                    Id = Guid.NewGuid(),
                     Task = "Sommerreifen aufziehen " + i,
                     Until = new DateTime(2018, 4, i)
                 })
@@ -52,6 +61,7 @@ namespace Domain.Tests.Assignment2.Mod
 
             var command = new ComposeTodoCommand
             {
+                Id = Guid.NewGuid(),
                 Task = "Sommerreifen aufziehen",
                 Until = new DateTime(2018, 4, 15)
             };
@@ -71,6 +81,12 @@ namespace Domain.Tests.Assignment2.Mod
     {
         public string Task { get; set; }
         public DateTime? Until { get; set; }
+        public Guid Id { get; internal set; }
+    }
+
+    public class ResolveTodoCommand
+    {
+        public Guid Id { get; set; }
     }
 
     public class Todo
@@ -78,6 +94,7 @@ namespace Domain.Tests.Assignment2.Mod
         private readonly string task;
         private DateTime? until;
         private Priority priority;
+        private DateTime? resolvedOn;
 
         private Todo(string task)
         {
@@ -98,6 +115,12 @@ namespace Domain.Tests.Assignment2.Mod
                 priority = Priority.High;
             else
                 priority = Priority.Medium;
+        }
+
+        public void Resolve()
+        {
+            if (!resolvedOn.HasValue)
+                resolvedOn = DateTime.Now;
         }
     }
 
@@ -121,8 +144,18 @@ namespace Domain.Tests.Assignment2.Mod
             if (command.Until.HasValue)
                 todo.ShiftDeadline(command.Until.Value);
 
-            repository.Save(todo);
+            repository.Save(command.Id, todo);
         }
+
+        public void When(ResolveTodoCommand command)
+        {
+            var todo = repository.Get(command.Id);
+
+            todo.Resolve();
+
+            repository.Save(command.Id, todo);
+        }
+
     }
 
     namespace Helpers
