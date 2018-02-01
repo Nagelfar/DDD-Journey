@@ -5,6 +5,15 @@ namespace Domain.Tests
 {
     using System.Collections.Generic;
     using static Output;
+     public interface IRepository<T>
+    {
+        void Save(T entity);
+
+        void Save(Guid id, T entity);
+
+        T  Get(Guid id);
+    }
+    
     public class InMemoryRepository<T> : IRepository<T>
     {
         private IDictionary<Guid, T> entities = new Dictionary<Guid, T>();
