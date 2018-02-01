@@ -15,16 +15,19 @@ namespace Domain.Tests.Assignment1.Mod
 
     public class Todo
     {
-        private readonly string task;
+        private string task;
         private DateTime? until;
         private Priority priority;
 
-        private Todo(string task)
+        private Todo()
         {
-            this.task = task;
+
         }
 
-        public static Todo ComposeNew(string task) => new Todo(task);
+        public static Todo ComposeNew(string task) => new Todo()
+        {
+            task = task
+        };
 
         public void ShiftDeadline(DateTime until)
         {
@@ -55,7 +58,7 @@ namespace Domain.Tests.Assignment1.Mod
         public void ComposeTodo(string task, DateTime until)
         {
             var todo = Todo.ComposeNew(task);
-            
+
             todo.ShiftDeadline(until);
 
             repository.Save(todo);
